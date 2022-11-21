@@ -82,6 +82,30 @@ Syncing buffer_overflow
 Success!
 ```
 
+## 5. Verify & pull challenges
+
+If, at any point, changes may have been made to a challenge through the CTFd UI by an admin. To verify that your challenge.yml file matches remote contents, you can use:
+
+```
+❯ ctf challenge verify [challenge.yml | DIRECTORY] [--verify-files] [--verify-defaults]
+```
+
+If the `--verify-files` flag is set, challenge files will be downloaded and the binary files will be compared.
+
+If the `--verify-defaults` flag is set, challenge files will be verified to make sure they include default optional keys present on CTFd.
+If you want to pull down the latest version of the challenge, and its challenge files, you can use:
+
+```
+❯ ctf challenge verify [challenge.yml | DIRECTORY] [--update_files] [--create-files] [--create_defaults]
+```
+
+If the `--update_files` flag is set, the latest version of every file will be redownloaded from CTFd.
+
+If the `--create-files` flag is set, any new files added to through the CTFd UI will be downloaded to the same directory as the `challenge.yml` file.
+
+If the `--create-defaults` flag is set, any optional default values will be added to the `challenge.yml`.
+
+**This is a destructive action! It will overwrite the local version of `challenge.yml` with the version on CTFd!**
 # Challenge Templates
 
 `ctfcli` contains pre-made challenge templates to make it faster to create CTF challenges with safe defaults.
