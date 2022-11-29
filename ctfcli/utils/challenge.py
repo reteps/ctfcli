@@ -461,7 +461,7 @@ def get_challenge_details(challenge_id):
     requirements = (r.json().get("data") or {}).get("prerequisites", [])
     if len(requirements) > 0:
         # Prefer challenge names over IDs
-        r = s.get("/api/v1/challenges", json=True)
+        r = s.get("/api/v1/challenges?view=admin", json=True)
         r.raise_for_status()
         challenges = r.json()["data"]
         challenge["requirements"] = [c["name"] for c in challenges if c["id"] in requirements]
@@ -608,15 +608,24 @@ def pull_challenge(challenge, ignore=(), update_files=False, create_files=False,
     # Merge local and remote challenge.yml & Preserve local keys + order
     updated_challenge = dict(challenge)
 
+    # Ignore optional fields with default values
+    remote_details_updates = {}
+    for k, v in remote_details.items():
+        # If the key value changed, we want to update it
+        if k in challenge and challenge[k] != v:
+            remote_details_updates[k] = v
+        elif not is_default(k, v) or create_defaults:
+            remote_details_updates[k] = v
+
     # Add all preferred keys
     for key in preferred_order:
-        if key in remote_details and key not in ignore:
-            updated_challenge[key] = remote_details[key]
+        if key in remote_details_updates and key not in ignore:
+            updated_challenge[key] = remote_details_updates[key]
 
     # Add remaining keys
-    for key in remote_details:
+    for key in remote_details_updates:
         if key not in preferred_order and key not in ignore:
-            updated_challenge[key] = remote_details[key]
+            updated_challenge[key] = remote_details_updates[key]
 
     # Hack: remove tabs in multiline strings
     updated_challenge['description'] = updated_challenge['description'].replace('\t', '')
