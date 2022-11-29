@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from pathlib import Path
 import subprocess
 
@@ -568,7 +569,7 @@ def pull_challenge(challenge, ignore=(), update_files=False, create_files=False,
     remote_details = get_challenge_details(challenge_id)
     # Ignore optional fields with default values
     remote_details = {k: v for k, v in remote_details.items() if not is_default(k, v) or create_defaults}
-    local_files = {Path(f).name : f for f in challenge["files"]}
+    local_files = {Path(f).name : f for f in challenge.get("files",[])}
     # Update files
     for f in remote_details["files"]:
         # Get base file name
@@ -579,6 +580,8 @@ def pull_challenge(challenge, ignore=(), update_files=False, create_files=False,
             req = s.get(f)
             req.raise_for_status()
             Path(challenge.directory, f_base).write_bytes(req.content)
+            if "files" not in challenge:
+                challenge["files"] = []
             challenge["files"].append(f_base)
 
         elif f_base in local_files and update_files:
@@ -592,20 +595,30 @@ def pull_challenge(challenge, ignore=(), update_files=False, create_files=False,
 
     # Remove files that are no longer present on the remote challenge
     remote_cleaned_files = [f.split("/")[-1].split('?token=')[0] for f in remote_details["files"]]
-    challenge["files"] = [f for f in challenge["files"] if Path(f).name in remote_cleaned_files]
+    challenge["files"] = [f for f in challenge.get("files",[]) if Path(f).name in remote_cleaned_files]
     del remote_details["files"]
         
     print(f"Updating challenge.yml for {challenge['name']}")
 
+    # Prefer ordering remote details as described by spec
+    preferred_order = ["name", "category", "description", \
+        "value", "type", "connection_info", "attempts", \
+            "flags", "topics", "tags", "files", "hints", "requirements", "state"]
+
     # Merge local and remote challenge.yml & Preserve local keys + order
     updated_challenge = dict(challenge)
 
-    for key in remote_details:
-        if key in ignore:
-            continue
-        updated_challenge[key] = remote_details[key]
+    # Add all preferred keys
+    for key in preferred_order:
+        if key in remote_details and key not in ignore:
+            updated_challenge[key] = remote_details[key]
 
-    # Hack: remove whitespace before newlines in multiline strings
+    # Add remaining keys
+    for key in remote_details:
+        if key not in preferred_order and key not in ignore:
+            updated_challenge[key] = remote_details[key]
+
+    # Hack: remove tabs in multiline strings
     updated_challenge['description'] = updated_challenge['description'].replace('\t', '')
 
     with open(challenge.file_path, "w") as f:
