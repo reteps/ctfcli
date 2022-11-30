@@ -35,7 +35,7 @@ def load_installed_challenges():
     return s.get("/api/v1/challenges?view=admin", json=True).json()["data"]
 
 
-def sync_challenge(challenge, ignore=[]):
+def sync_challenge(challenge, ignore=[], ctfd_name=None):
     data = {
         "name": challenge["name"],
         "category": challenge["category"],
@@ -60,7 +60,8 @@ def sync_challenge(challenge, ignore=[]):
 
     installed_challenges = load_installed_challenges()
     for c in installed_challenges:
-        if c["name"] == challenge["name"]:
+        challenge_name = ctfd_name if ctfd_name is not None else challenge["name"]
+        if c["name"] == challenge_name:
             if "category" in ignore:
                 data["category"] = c["category"]
             challenge_id = c["id"]

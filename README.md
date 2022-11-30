@@ -82,6 +82,8 @@ Syncing buffer_overflow
 Success!
 ```
 
+The additional flag, `--ctfd-name [NAME]` can be passed to optionally sync to a challenge with a different-name in CTFd.
+
 ## 5. Verify & pull challenges
 
 If, at any point, changes may have been made to a challenge through the CTFd UI by an admin. To verify that your challenge.yml file matches remote contents, you can use:

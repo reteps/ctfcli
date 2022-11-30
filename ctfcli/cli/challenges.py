@@ -179,7 +179,7 @@ class Challenge(object):
                 create_challenge(challenge=challenge, ignore=ignore)
                 click.secho("Success!", fg="green")
 
-    def sync(self, challenge=None, ignore=()):
+    def sync(self, challenge=None, ignore=(), ctfd_name=None):
         if challenge is None:
             # Get all challenges if not specifying a challenge
             config = load_config()
@@ -189,7 +189,11 @@ class Challenge(object):
 
         if isinstance(ignore, str):
             ignore = (ignore,)
-
+        
+        if ctfd_name is not None and len(challenges) != 1:
+            click.secho("You can only specify one challenge when using --ctfd-name", fg="red")
+            return
+        
         for challenge in challenges:
             path = Path(challenge)
 
@@ -202,7 +206,8 @@ class Challenge(object):
 
             installed_challenges = load_installed_challenges()
             for c in installed_challenges:
-                if c["name"] == challenge["name"]:
+                challenge_name = ctfd_name if ctfd_name is not None else challenge["name"]
+                if c["name"] == challenge_name:
                     break
             else:
                 click.secho(
@@ -212,8 +217,8 @@ class Challenge(object):
                 continue  # Go to the next challenge in the overall list
 
             click.secho(f'Syncing {challenge["name"]}', fg="yellow")
-            sync_challenge(challenge=challenge, ignore=ignore)
-            click.secho("Success!", fg="green")
+            sync_challenge(challenge=challenge, ignore=ignore, ctfd_name=ctfd_name)
+            click.secho(f"Success!", fg="green")
 
     def update(self, challenge=None):
         config = load_config()

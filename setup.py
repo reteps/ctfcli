@@ -21,7 +21,7 @@ def read(fname):
 
 
 setup(
-    name="ctfcli",
+    name="reteps-ctfcli",
     version=version,
     author="Kevin Chung",
     author_email="kchung@ctfd.io",
